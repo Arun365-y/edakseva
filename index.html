@@ -1,0 +1,75 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>e_DakSeva - Department of Posts, Ministry of Communications</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --india-post-red: #C8102E;
+            --india-post-yellow: #FFCC00;
+            --govt-blue: #003366;
+            --govt-gray: #f8f9fa;
+        }
+        body { 
+            font-family: 'Roboto', sans-serif; 
+            background-color: #f4f7f6;
+            color: #333;
+        }
+        .india-post-red { color: var(--india-post-red); }
+        .bg-india-post-red { background-color: var(--india-post-red); }
+        .border-india-post-red { border-color: var(--india-post-red); }
+        
+        .govt-shadow {
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+        }
+        
+        /* Marquee effect for government site feel */
+        @keyframes marquee {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+        .animate-marquee {
+            display: inline-block;
+            white-space: nowrap;
+            animation: marquee 30s linear infinite;
+        }
+
+        /* Official Document Look */
+        .official-doc {
+            background-image: radial-gradient(#C8102E 0.5px, transparent 0.5px);
+            background-size: 20px 20px;
+            background-color: #ffffff;
+            opacity: 0.03;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--india-post-red);
+        }
+    </style>
+<script type="importmap">
+{
+  "imports": {
+    "@google/genai": "https://esm.sh/@google/genai@^1.34.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react": "https://esm.sh/react@^19.2.3"
+  }
+}
+</script>
+</head>
+<body class="antialiased">
+    <div id="root"></div>
+</body>
+</html>
