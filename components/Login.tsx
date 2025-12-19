@@ -1,12 +1,23 @@
 
 import React, { useState } from 'react';
 import { Language, translations } from '../translations';
-import { UserSession } from '../types';
+import { UserSession, UserRole } from '../types';
 
 interface LoginProps {
   lang: Language;
   onLogin: (session: UserSession) => void;
 }
+
+// Hardcoded User Database as requested
+const USER_DB: Record<string, { password: string; role: UserRole; name: string }> = {
+  '1234567890': { password: 'user0001', role: 'user', name: 'Rahul' },
+  '2345678901': { password: 'user0002', role: 'user', name: 'Ramu' },
+  '3456789012': { password: 'user0003', role: 'user', name: 'Fatima' },
+  '4567890123': { password: 'user0004', role: 'user', name: 'Sonu' },
+  '5678901234': { password: 'user0005', role: 'user', name: 'Mr. Bachan' },
+  '9000000001': { password: '1245', role: 'admin', name: 'Admin1' },
+  '9000000002': { password: '1245', role: 'admin', name: 'Admin2' }
+};
 
 export const Login: React.FC<LoginProps> = ({ lang, onLogin }) => {
   const t = translations[lang];
@@ -19,23 +30,29 @@ export const Login: React.FC<LoginProps> = ({ lang, onLogin }) => {
     e.preventDefault();
     setError(null);
 
-    if (loginMode === 'admin') {
-      if (idValue === 'admin' && password === '1245') {
-        onLogin({ customerId: 'admin', role: 'admin', name: 'Post Master' });
-      } else {
-        setError('Invalid Official Credentials. (Tip: Use admin / 1245)');
-      }
-    } else {
-      if (idValue.length !== 10 || !/^\d+$/.test(idValue)) {
-        setError('Citizen Customer ID must be exactly 10 digits.');
-        return;
-      }
-      if (password.length !== 8) {
-        setError('Citizen Password must be exactly 8 characters.');
-        return;
-      }
-      onLogin({ customerId: idValue, role: 'user', name: 'Citizen User' });
+    const userEntry = USER_DB[idValue];
+
+    if (!userEntry) {
+      setError(`ID not found in the ${loginMode === 'admin' ? 'official' : 'citizen'} database.`);
+      return;
     }
+
+    if (userEntry.password !== password) {
+      setError('Invalid password. Please check your credentials.');
+      return;
+    }
+
+    if (userEntry.role !== loginMode) {
+      setError(`This ID is registered as ${userEntry.role === 'admin' ? 'Official' : 'Citizen'}. Please switch tabs.`);
+      return;
+    }
+
+    // Success
+    onLogin({ 
+      customerId: idValue, 
+      role: userEntry.role, 
+      name: userEntry.name 
+    });
   };
 
   const switchMode = (mode: 'admin' | 'user') => {
@@ -52,7 +69,7 @@ export const Login: React.FC<LoginProps> = ({ lang, onLogin }) => {
             <svg className="w-5 h-5 text-[#FFCC00]" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a5 5 0 00-5 5v2a2 2 0 00-2 2v5a2 2 0 002 2h10a2 2 0 002-2v-5a2 2 0 00-2-2V7a5 5 0 00-5-5zM7 7a3 3 0 016 0v2H7V7z"/></svg>
             <span className="text-[#FFCC00] text-[0.625rem] font-black uppercase tracking-[0.2em]">Govt. Secure Access</span>
          </div>
-         <span className="text-white/40 text-[0.5625rem] font-bold">ST-4.2.0</span>
+         <span className="text-white/40 text-[0.5625rem] font-bold">ST-4.3.0</span>
       </div>
 
       <div className="flex border-b border-slate-100 bg-slate-50">
@@ -98,8 +115,8 @@ export const Login: React.FC<LoginProps> = ({ lang, onLogin }) => {
                 setIdValue(e.target.value); 
                 setError(null); 
               }}
-              className={`w-full px-4 py-3 border-2 rounded-sm focus:border-[#C8102E] outline-none text-sm font-black transition-all bg-white text-black placeholder:text-slate-400 ${error && (error.includes('ID') || error.includes('Employee')) ? 'border-red-600 bg-red-50' : 'border-black'}`}
-              placeholder={loginMode === 'admin' ? "Enter Employee ID" : "10-Digit Customer ID"}
+              className={`w-full px-4 py-3 border-2 rounded-sm focus:border-[#C8102E] outline-none text-sm font-black transition-all bg-white text-black placeholder:text-slate-400 ${error && (error.includes('ID') || error.includes('database')) ? 'border-red-600 bg-red-50' : 'border-black'}`}
+              placeholder={loginMode === 'admin' ? "Enter Admin ID (e.g. 9000000001)" : "10-Digit Customer ID"}
               required
             />
           </div>
@@ -107,14 +124,13 @@ export const Login: React.FC<LoginProps> = ({ lang, onLogin }) => {
             <label className="text-[0.5625rem] font-black text-[#003366] uppercase tracking-widest">{t.password}</label>
             <input 
               type="password" 
-              maxLength={12}
               value={password}
               onChange={(e) => { 
                 setPassword(e.target.value); 
                 setError(null); 
               }}
-              className={`w-full px-4 py-3 border-2 rounded-sm focus:border-[#C8102E] outline-none text-sm font-black transition-all bg-white text-black placeholder:text-slate-400 ${error && (error.includes('Password') || error.includes('Credentials')) ? 'border-red-600 bg-red-50' : 'border-black'}`}
-              placeholder={loginMode === 'admin' ? "Enter Password" : "8-Character Password"}
+              className={`w-full px-4 py-3 border-2 rounded-sm focus:border-[#C8102E] outline-none text-sm font-black transition-all bg-white text-black placeholder:text-slate-400 ${error && (error.includes('password') || error.includes('Credentials')) ? 'border-red-600 bg-red-50' : 'border-black'}`}
+              placeholder="Enter Password"
               required
             />
           </div>
@@ -141,9 +157,7 @@ export const Login: React.FC<LoginProps> = ({ lang, onLogin }) => {
       
       <div className="bg-slate-50 p-6 text-center border-t border-slate-100">
         <p className="text-[0.5625rem] text-slate-400 font-bold uppercase tracking-widest leading-relaxed">
-          {loginMode === 'admin' 
-            ? 'Access restricted to authorized Department of Posts officials.' 
-            : 'Access restricted to registered India Post customers.'}
+          Access restricted to registered users and authorized officials in the secure database only.
         </p>
       </div>
     </div>

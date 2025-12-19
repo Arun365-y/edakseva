@@ -20,7 +20,7 @@ const CITIES = [
 ];
 
 const STATUSES: ('In Transit' | 'Delivered' | 'Out for Delivery')[] = [
-  'In Transit', 'Delivered' as const, 'Out for Delivery' as const, 'In Transit'
+  'In Transit', 'Delivered', 'Out for Delivery'
 ];
 
 const hashString = (str: string) => {
@@ -34,27 +34,38 @@ const hashString = (str: string) => {
 };
 
 const getMockOrdersForUser = (customerId: string): PostOrder[] => {
-  if (customerId === 'admin') return [];
+  if (customerId.startsWith('9000')) return []; // Admins get no public orders
+  
   const baseHash = hashString(customerId);
-  const orderCount = (baseHash % 3) + 2; 
+  let orderCount = 2; // Default
+  
+  // Specific user requirements:
+  if (customerId === '1234567890') orderCount = 1; // Rahul
+  else if (customerId === '2345678901') orderCount = 2; // Ramu
+  else if (customerId === '3456789012') orderCount = 3; // Fatima
+  else if (customerId === '4567890123') orderCount = 4; // Sonu
+  else if (customerId === '5678901234') orderCount = 5; // Mr. Bachan
+
   const orders: PostOrder[] = [];
   for (let i = 0; i < orderCount; i++) {
-    const itemSeed = baseHash + (i * 1337);
-    const originIdx = itemSeed % CITIES.length;
-    const destIdx = (itemSeed + 7) % CITIES.length === originIdx 
-      ? (itemSeed + 8) % CITIES.length 
-      : (itemSeed + 7) % CITIES.length;
+    const itemSeed = baseHash + (i * 97); // Unique seed per item
+    const originIdx = (itemSeed) % CITIES.length;
+    const destIdx = (itemSeed + 5) % CITIES.length === originIdx 
+      ? (itemSeed + 6) % CITIES.length 
+      : (itemSeed + 5) % CITIES.length;
+    
     const status = STATUSES[itemSeed % STATUSES.length];
-    const day = (itemSeed % 28) + 1;
-    const trackingPrefix = (itemSeed % 2 === 0) ? 'SP' : 'RP';
-    const trackingNum = (itemSeed % 9000000) + 1000000;
+    const day = (itemSeed % 25) + 1;
+    const trackingPrefix = (i % 2 === 0) ? 'SP' : 'RP';
+    const trackingNum = 5000000 + (itemSeed % 4000000);
+
     orders.push({
       id: `ORD-${itemSeed % 10000}`,
       trackingId: `${trackingPrefix}${trackingNum}IN`,
       origin: CITIES[originIdx],
       destination: CITIES[destIdx],
-      status: status as 'In Transit' | 'Delivered' | 'Out for Delivery',
-      estimatedDelivery: `${day} Oct 2023`
+      status: status,
+      estimatedDelivery: `${day} Nov 2024`
     });
   }
   return orders;
@@ -94,9 +105,12 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ lang, session, his
              <div className="w-1.5 h-6 bg-[#C8102E]"></div>
              <h2 className="text-lg font-black text-[#003366] uppercase tracking-[0.1em]">{t.myOrders}</h2>
           </div>
+          <div className="bg-[#003366] text-white px-4 py-1 text-[0.5rem] font-black uppercase tracking-widest rounded-sm">
+             {userOrders.length} active consignments found
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {userOrders.map(order => {
             const hasGrievance = userComplaints.some(c => c.orderId === order.id);
             return (

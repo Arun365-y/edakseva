@@ -7,7 +7,8 @@ export class GeminiService {
   private ai: GoogleGenAI;
 
   constructor() {
-    this.ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+    // Initialize GoogleGenAI with the API key from environment variables.
+    this.ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   }
 
   async analyzeComplaint(text: string): Promise<AnalysisResult> {
@@ -33,6 +34,7 @@ export class GeminiService {
     });
 
     try {
+      // Access the .text property of the response directly.
       const result = JSON.parse(response.text || '{}');
       return result as AnalysisResult;
     } catch (error) {
@@ -71,6 +73,7 @@ Keep tone:
       contents: prompt,
     });
 
+    // Access the .text property of the response directly.
     return response.text || '';
   }
 
@@ -83,6 +86,7 @@ Keep tone:
       history: history,
     });
 
+    // sendMessage accepts message parameter and returns a response with a text property.
     const result = await chat.sendMessage({ message: userMessage });
     return result.text || "I apologize, but I am unable to process that right now. Please try again or contact our toll-free support.";
   }

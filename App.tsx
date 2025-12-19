@@ -16,6 +16,7 @@ const App: React.FC = () => {
   const [session, setSession] = useState<UserSession | null>(null);
   const [fontSize, setFontSize] = useState<number>(100);
   const [showPublicStats, setShowPublicStats] = useState(false);
+  const [showAdminMetrics, setShowAdminMetrics] = useState(false);
   
   const [isSyncing, setIsSyncing] = useState(false);
   const [processingStep, setProcessingStep] = useState<number>(0);
@@ -242,18 +243,6 @@ const App: React.FC = () => {
     urgent: history.filter(h => h.priority === PriorityLevel.HIGH && h.status !== 'sent').length
   };
 
-  const locationCounts = history.reduce((acc, curr) => {
-    const loc = curr.location || 'Unspecified Circle';
-    acc[loc] = (acc[loc] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
-
-  // Fix: Explicitly type the sort operands to avoid "arithmetic operation must be type any, number..." errors
-  const sortedLocations = Object.entries(locationCounts).sort((a: [string, number], b: [string, number]) => b[1] - a[1]);
-  const highestLocation = sortedLocations.length > 0 ? sortedLocations[0] : null;
-  const lowestLocation = sortedLocations.length > 0 ? sortedLocations[sortedLocations.length - 1] : null;
-  const topCircles = sortedLocations.slice(0, 3);
-
   const renderContent = () => {
     if (!session) {
       return <Login lang={lang} onLogin={setSession} />;
@@ -276,108 +265,62 @@ const App: React.FC = () => {
     }
 
     return (
-      <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-700">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <div className="lg:col-span-3 bg-white border-2 border-slate-100 p-6 rounded-sm shadow-sm flex flex-col justify-between">
-              <div>
-                 <p className="text-[0.625rem] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Inbound Traffic</p>
-                 <div className="flex items-baseline gap-2">
-                    <span className="text-4xl font-black text-[#003366]">{stats.total}</span>
-                    <span className="text-[0.625rem] font-bold text-slate-400 uppercase">Total Received</span>
-                 </div>
-              </div>
-              <div className="mt-8 space-y-3">
-                 <div className="flex justify-between items-center text-[0.6875rem] font-bold">
-                    <span className="text-india-post-red uppercase tracking-tighter">● Pending Action</span>
-                    <span className="text-india-post-red">{stats.pending}</span>
-                 </div>
-                 <div className="w-full h-1 bg-slate-50 rounded-full overflow-hidden">
-                    {/* Fix: Added explicit casting and fallback for division to resolve arithmetic type errors */}
-                    <div className="h-full bg-india-post-red" style={{ width: `${stats.total > 0 ? ((stats.pending as number) / (stats.total as number || 1)) * 100 : 0}%` }}></div>
-                 </div>
-                 <div className="flex justify-between items-center text-[0.6875rem] font-bold">
-                    <span className="text-emerald-600 uppercase tracking-tighter">● Resolved Solution</span>
-                    <span className="text-emerald-600">{stats.solved}</span>
-                 </div>
-                 <div className="w-full h-1 bg-slate-50 rounded-full overflow-hidden">
-                    {/* Fix: Added explicit casting and fallback for division to resolve arithmetic type errors */}
-                    <div className="h-full bg-emerald-500" style={{ width: `${stats.total > 0 ? ((stats.solved as number) / (stats.total as number || 1)) * 100 : 0}%` }}></div>
-                 </div>
-              </div>
-            </div>
-
-            <div className="lg:col-span-5 bg-[#003366] text-white p-6 rounded-sm shadow-lg relative overflow-hidden">
-               <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 -mr-16 -mt-16 rounded-full blur-3xl"></div>
-               <div className="absolute bottom-0 left-0 w-24 h-24 bg-india-post-red/10 -ml-12 -mb-12 rounded-full blur-2xl"></div>
-               <div className="flex items-center justify-between mb-8 border-b border-white/10 pb-4">
-                  <h3 className="text-[0.625rem] font-black uppercase tracking-widest text-[#FFCC00]">Regional Stress (Inbound Circles)</h3>
-                  <div className="flex items-center gap-2">
-                     <div className="w-2 h-2 rounded-full bg-india-post-red animate-pulse"></div>
-                     <span className="text-[0.5rem] font-bold text-white/40 uppercase">Real-time Feed</span>
-                  </div>
-               </div>
-               <div className="grid grid-cols-2 gap-8">
-                  <div>
-                     <p className="text-[0.5625rem] font-black text-white/40 uppercase tracking-widest mb-3">Highest Complaining State</p>
-                     {highestLocation ? (
-                       <div className="flex flex-col gap-1">
-                          <span className="text-xl font-black uppercase text-india-post-red tracking-tight leading-none">{highestLocation[0]}</span>
-                          <div className="flex items-center gap-2 mt-1">
-                             <span className="text-[0.625rem] font-black bg-india-post-red px-2 py-0.5 rounded-sm">{highestLocation[1]} Hits</span>
-                             <span className="text-[0.5rem] font-bold text-white/20 uppercase tracking-widest">Inundated</span>
-                          </div>
-                       </div>
-                     ) : <span className="text-xs text-white/20 italic">No Data Collected</span>}
-                  </div>
-                  <div className="border-l border-white/10 pl-8">
-                     <p className="text-[0.5625rem] font-black text-white/40 uppercase tracking-widest mb-3">Lowest Complaining State</p>
-                     {lowestLocation ? (
-                       <div className="flex flex-col gap-1">
-                          <span className="text-xl font-black uppercase text-[#FFCC00] tracking-tight leading-none">{lowestLocation[0]}</span>
-                          <div className="flex items-center gap-2 mt-1">
-                             <span className="text-[0.625rem] font-black bg-[#FFCC00] text-[#003366] px-2 py-0.5 rounded-sm">{lowestLocation[1]} Hits</span>
-                             <span className="text-[0.5rem] font-bold text-white/20 uppercase tracking-widest">Stable</span>
-                          </div>
-                       </div>
-                     ) : <span className="text-xs text-white/20 italic">No Data Collected</span>}
-                  </div>
-               </div>
-               <div className="mt-8 pt-6 border-t border-white/5">
-                  <p className="text-[0.5rem] font-black text-white/30 uppercase tracking-[0.3em] mb-4">Distribution Spectrum</p>
-                  <div className="space-y-3">
-                     {topCircles.map(([name, count]) => (
-                       <div key={name} className="flex items-center gap-4">
-                          <span className="w-24 text-[0.5625rem] font-black text-white/60 uppercase truncate">{name}</span>
-                          <div className="flex-1 h-1.5 bg-white/5 rounded-full overflow-hidden">
-                             {/* Fix: Explicitly ensure count and highestLocation are numbers for arithmetic operations */}
-                             <div className="h-full bg-india-post-red/60" style={{ width: `${((count as number) / ((highestLocation?.[1] as number) || 1)) * 100}%` }}></div>
-                          </div>
-                          <span className="text-[0.5625rem] font-black text-white/60">{count}</span>
-                       </div>
-                     ))}
-                  </div>
-               </div>
-            </div>
-
-            <div className="lg:col-span-4 bg-white border-2 border-slate-100 p-6 rounded-sm shadow-sm flex flex-col justify-between overflow-hidden relative">
-                <div className="absolute top-0 right-0 p-2 bg-india-post-red text-white text-[0.5rem] font-black uppercase -mr-2 mt-2 rotate-45 w-24 text-center">Alert Active</div>
-                <div>
-                  <p className="text-[0.625rem] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Priority Escalations</p>
-                  <div className="flex items-center gap-4">
-                     <span className="text-6xl font-black text-india-post-red">{stats.urgent}</span>
-                     <div className="flex flex-col">
-                        <span className="text-[0.625rem] font-black text-india-post-red uppercase tracking-widest">Urgent (Red-Level)</span>
-                        <span className="text-[0.5rem] font-bold text-slate-400 uppercase mt-1 leading-relaxed">Requiring Post Master Sign-off</span>
-                     </div>
-                  </div>
-                </div>
-                <div className="mt-4 p-4 bg-red-50 border border-red-100 rounded-sm">
-                   <p className="text-[0.5625rem] font-bold text-india-post-red leading-relaxed uppercase italic">
-                      All urgent cases are currently being analyzed by the NLP engine for fast-track resolution.
-                   </p>
-                </div>
-            </div>
+      <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-700">
+        {/* Toggleable core metrics section as requested */}
+        <div className="flex justify-start">
+          <button 
+            onClick={() => setShowAdminMetrics(!showAdminMetrics)}
+            className={`flex items-center gap-3 px-6 py-3 rounded-sm text-[0.625rem] font-black uppercase tracking-[0.2em] transition-all shadow-lg active:scale-95 border-b-4 ${showAdminMetrics ? 'bg-[#003366] text-white border-black/20' : 'bg-white text-[#003366] border-slate-200 hover:border-[#003366]'}`}
+          >
+            <svg className={`w-4 h-4 transition-transform duration-300 ${showAdminMetrics ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" strokeWidth={2}/></svg>
+            {showAdminMetrics ? 'Hide Core Snapshot' : 'View System Snapshot'}
+          </button>
         </div>
+
+        {showAdminMetrics && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-in fade-in slide-in-from-top-4 duration-500">
+              {/* Pillar 1 & 2: Inbound Traffic & Pending Actions */}
+              <div className="bg-white border-2 border-slate-100 p-8 rounded-sm shadow-xl flex flex-col md:flex-row justify-between items-center gap-10">
+                <div className="flex-1">
+                   <p className="text-[0.625rem] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Inbound Traffic</p>
+                   <div className="flex items-baseline gap-3">
+                      <span className="text-5xl font-black text-[#003366]">{stats.total}</span>
+                      <span className="text-[0.625rem] font-bold text-slate-400 uppercase tracking-widest">Total Received</span>
+                   </div>
+                </div>
+                <div className="flex flex-col gap-6 flex-1 w-full">
+                   <div className="flex justify-between items-center bg-red-50 p-4 border border-red-100 rounded-sm">
+                      <span className="text-[0.625rem] font-black text-india-post-red uppercase tracking-widest">● Pending Action</span>
+                      <span className="text-2xl font-black text-india-post-red">{stats.pending}</span>
+                   </div>
+                   <div className="flex justify-between items-center bg-emerald-50 p-4 border border-emerald-100 rounded-sm">
+                      <span className="text-[0.625rem] font-black text-emerald-600 uppercase tracking-widest">● Resolved Solution</span>
+                      <span className="text-2xl font-black text-emerald-600">{stats.solved}</span>
+                   </div>
+                </div>
+              </div>
+
+              {/* Pillar 3: Priority Escalations */}
+              <div className="bg-white border-2 border-slate-100 p-8 rounded-sm shadow-xl flex flex-col justify-between overflow-hidden relative group">
+                  <div className="absolute top-0 right-0 p-2 bg-india-post-red text-white text-[0.5rem] font-black uppercase rotate-45 w-32 text-center -mr-8 mt-4 shadow-lg">Alert Active</div>
+                  <div>
+                    <p className="text-[0.625rem] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Priority Escalations</p>
+                    <div className="flex items-center gap-6">
+                       <span className="text-6xl font-black text-india-post-red drop-shadow-sm">{stats.urgent}</span>
+                       <div className="flex flex-col">
+                          <span className="text-[0.625rem] font-black text-india-post-red uppercase tracking-widest">Urgent (Red-Level)</span>
+                          <span className="text-[0.5625rem] font-bold text-slate-400 uppercase mt-1 leading-relaxed">Requiring Post Master Sign-off</span>
+                       </div>
+                    </div>
+                  </div>
+                  <div className="mt-6 p-4 bg-slate-50 border-l-4 border-india-post-red rounded-sm">
+                     <p className="text-[0.5625rem] font-bold text-slate-500 leading-relaxed uppercase italic">
+                        All urgent cases are currently being analyzed by the NLP engine for fast-track resolution.
+                     </p>
+                  </div>
+              </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-full min-h-[600px]">
           <div className="lg:col-span-4 space-y-4">
