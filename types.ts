@@ -1,22 +1,19 @@
 
 export enum ComplaintCategory {
-  DELIVERY_DELAY = 'Delivery Delay',
-  LOST_PACKAGE = 'Lost Package',
-  DAMAGED_PARCEL = 'Damaged Parcel',
-  WRONG_ADDRESS = 'Wrong Address',
-  REFUND_COMPENSATION = 'Refund or Compensation',
-  STAFF_BEHAVIOUR = 'Staff Behaviour',
-  OTHER = 'Other'
+  DELIVERY_DELAY = 'Delay',
+  LOST_PACKAGE = 'Lost',
+  DAMAGED_PARCEL = 'Damage',
+  INVALID = 'Invalid',
+  OTHERS = 'Others'
 }
 
 export enum SentimentLevel {
   ANGRY = 'Angry',
   UNHAPPY = 'Unhappy',
-  NEUTRAL = 'neutral',
-  POSITIVE = 'positive'
+  NEUTRAL = 'Neutral',
+  POSITIVE = 'Positive'
 }
 
-// Updated PriorityLevel values to align with the 'Urgent' and 'Normal' output from Gemini as defined in constants.ts
 export enum PriorityLevel {
   HIGH = 'Urgent',
   NORMAL = 'Normal',
@@ -26,18 +23,18 @@ export enum PriorityLevel {
 export type UserRole = 'admin' | 'user';
 
 export interface UserSession {
-  email: string;
+  customerId: string;
   role: UserRole;
   name: string;
 }
 
 export interface AnalysisResult {
-  category: ComplaintCategory;
-  sentiment: SentimentLevel;
-  priority: PriorityLevel;
+  category: string;
+  sentiment: string;
+  priority: string;
   response: string;
   requiresReview: boolean;
-  confidenceScore: number; // 0 to 1
+  confidenceScore: number;
 }
 
 export interface PostOrder {
@@ -52,13 +49,16 @@ export interface PostOrder {
 export interface ComplaintRecord extends Partial<AnalysisResult> {
   id: string;
   originalText: string;
-  customerEmail: string;
+  customerId: string;
   subject: string;
   timestamp: number;
   status: 'pending' | 'drafted' | 'sent' | 'resolved' | 'auto_resolved';
   formalEmailDraft?: string;
+  aiResponse?: string;      // Instant AI generation
+  adminResponse?: string;   // Final response approved/sent by admin
   userId?: string; 
   orderId?: string; 
   type: 'Complaint' | 'Feedback';
   source: 'portal' | 'gmail';
+  location?: string; // e.g., 'Delhi Circle', 'Mumbai Circle'
 }

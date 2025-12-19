@@ -10,28 +10,41 @@ interface LoginProps {
 
 export const Login: React.FC<LoginProps> = ({ lang, onLogin }) => {
   const t = translations[lang];
-  const [email, setEmail] = useState('');
+  const [loginMode, setLoginMode] = useState<'admin' | 'user'>('user');
+  const [idValue, setIdValue] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
 
-  const handleAdminLogin = (e: React.FormEvent) => {
+  const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (email === 'admin' && password === '1245') {
-      setError(null);
-      onLogin({ email: 'admin@indiapost.gov.in', role: 'admin', name: 'Post Master' });
+    setError(null);
+
+    if (loginMode === 'admin') {
+      // Official: admin / 1245
+      if (idValue === 'admin' && password === '1245') {
+        onLogin({ customerId: 'admin', role: 'admin', name: 'Post Master' });
+      } else {
+        setError('Invalid Official Credentials. Ensure Employee ID is "admin" and Password is correct.');
+      }
     } else {
-      setError('Invalid Official Credentials. Access Denied.');
+      // Citizen: 10-Digit ID & 8-Char Password
+      if (idValue.length !== 10 || !/^\d+$/.test(idValue)) {
+        setError('Citizen ID must be exactly 10 digits.');
+        return;
+      }
+      if (password.length !== 8) {
+        setError('Citizen Password must be exactly 8 characters.');
+        return;
+      }
+      onLogin({ customerId: idValue, role: 'user', name: 'Citizen User' });
     }
   };
 
-  const handleUserLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email.trim() || !password.trim()) {
-      setError('Citizens must provide registered email/mobile and password.');
-      return;
-    }
+  const switchMode = (mode: 'admin' | 'user') => {
+    setLoginMode(mode);
+    setIdValue('');
+    setPassword('');
     setError(null);
-    onLogin({ email: email, role: 'user', name: 'Citizen User' });
   };
 
   return (
@@ -42,7 +55,23 @@ export const Login: React.FC<LoginProps> = ({ lang, onLogin }) => {
             <svg className="w-5 h-5 text-[#FFCC00]" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a5 5 0 00-5 5v2a2 2 0 00-2 2v5a2 2 0 002 2h10a2 2 0 002-2v-5a2 2 0 00-2-2V7a5 5 0 00-5-5zM7 7a3 3 0 016 0v2H7V7z"/></svg>
             <span className="text-[#FFCC00] text-[10px] font-black uppercase tracking-[0.2em]">Secure Access Portal</span>
          </div>
-         <span className="text-white/40 text-[9px] font-bold">Ver 4.0.2</span>
+         <span className="text-white/40 text-[9px] font-bold">Ver 4.2.0</span>
+      </div>
+
+      {/* Mode Tabs */}
+      <div className="flex border-b border-slate-100 bg-slate-50">
+        <button 
+          onClick={() => switchMode('user')}
+          className={`flex-1 py-4 text-[10px] font-black uppercase tracking-[0.2em] transition-all border-b-2 ${loginMode === 'user' ? 'border-[#003366] text-[#003366] bg-white' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
+        >
+          {t.asUser}
+        </button>
+        <button 
+          onClick={() => switchMode('admin')}
+          className={`flex-1 py-4 text-[10px] font-black uppercase tracking-[0.2em] transition-all border-b-2 ${loginMode === 'admin' ? 'border-[#C8102E] text-[#C8102E] bg-white' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
+        >
+          {t.asAdmin}
+        </button>
       </div>
 
       <div className="p-10 relative">
@@ -52,30 +81,46 @@ export const Login: React.FC<LoginProps> = ({ lang, onLogin }) => {
         </div>
 
         <div className="text-center mb-8">
-          <h2 className="text-[#C8102E] font-black text-2xl uppercase tracking-tighter mb-1">{t.login}</h2>
-          <div className="w-16 h-1 bg-[#FFCC00] mx-auto mb-4"></div>
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Official e_DakSeva Gateway</p>
+          <h2 className={`font-black text-2xl uppercase tracking-tighter mb-1 transition-colors ${loginMode === 'admin' ? 'text-[#C8102E]' : 'text-[#003366]'}`}>
+            {loginMode === 'admin' ? 'Post Master Portal' : 'Citizen Grievance Cell'}
+          </h2>
+          <div className={`w-16 h-1 mx-auto mb-4 transition-colors ${loginMode === 'admin' ? 'bg-[#C8102E]' : 'bg-[#FFCC00]'}`}></div>
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+            {loginMode === 'admin' ? 'Authorized Officials Only' : 'Official Public Support Access'}
+          </p>
         </div>
 
-        <form className="space-y-5">
+        <form onSubmit={handleLogin} className="space-y-6">
           <div className="space-y-1.5">
-            <label className="text-[9px] font-black text-[#003366] uppercase tracking-widest">{t.email}</label>
+            <label className="text-[9px] font-black text-[#003366] uppercase tracking-widest">
+              {loginMode === 'admin' ? t.employeeId : t.citizenId}
+            </label>
             <input 
               type="text" 
-              value={email}
-              onChange={(e) => { setEmail(e.target.value); setError(null); }}
-              className={`w-full px-4 py-3 border-2 rounded-sm focus:border-[#C8102E] outline-none text-sm font-black transition-all bg-white text-black placeholder:text-slate-400 ${error ? 'border-red-600 bg-red-50' : 'border-black'}`}
-              placeholder="Username / Email ID"
+              maxLength={loginMode === 'admin' ? 10 : 10}
+              value={idValue}
+              onChange={(e) => { 
+                setIdValue(e.target.value); 
+                setError(null); 
+              }}
+              className={`w-full px-4 py-3 border-2 rounded-sm focus:border-[#C8102E] outline-none text-sm font-black transition-all bg-white text-black placeholder:text-slate-400 ${error && error.includes('ID') ? 'border-red-600 bg-red-50' : 'border-black'}`}
+              placeholder={loginMode === 'admin' ? "e.g. admin" : "10-Digit Customer ID"}
+              required
             />
           </div>
           <div className="space-y-1.5">
             <label className="text-[9px] font-black text-[#003366] uppercase tracking-widest">{t.password}</label>
             <input 
               type="password" 
+              maxLength={12}
               value={password}
-              onChange={(e) => { setPassword(e.target.value); setError(null); }}
-              className={`w-full px-4 py-3 border-2 rounded-sm focus:border-[#C8102E] outline-none text-sm font-black transition-all bg-white text-black placeholder:text-slate-400 ${error ? 'border-red-600 bg-red-50' : 'border-black'}`}
-              placeholder="••••••••"
+              onChange={(e) => { 
+                setPassword(e.target.value); 
+                setError(null); 
+              }}
+              className={`w-full px-4 py-3 border-2 rounded-sm focus:border-[#C8102E] outline-none text-sm font-black transition-all bg-white text-black placeholder:text-slate-400 ${error && (error.includes('Password') || error.includes('Credentials')) ? 'border-red-600 bg-red-50' : 'border-black'}`}
+              placeholder={loginMode === 'admin' ? "e.g. 1245" : "8-Character Password"}
+              required
             />
           </div>
 
@@ -86,23 +131,14 @@ export const Login: React.FC<LoginProps> = ({ lang, onLogin }) => {
             </div>
           )}
 
-          <div className="pt-4 flex flex-col gap-4">
+          <div className="pt-2">
             <button 
-              onClick={handleAdminLogin}
-              className="w-full py-3.5 bg-[#C8102E] text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-sm hover:brightness-110 transition-all shadow-xl active:scale-95 border-b-4 border-black/10"
+              type="submit"
+              className={`w-full py-4 text-white text-[11px] font-black uppercase tracking-[0.3em] rounded-sm transition-all shadow-xl active:scale-95 border-b-4 border-black/10 ${
+                loginMode === 'admin' ? 'bg-[#C8102E] hover:brightness-110' : 'bg-[#003366] hover:brightness-110'
+              }`}
             >
-              {t.asAdmin}
-            </button>
-            <div className="flex items-center gap-3 py-2">
-               <div className="flex-1 h-px bg-slate-100"></div>
-               <span className="text-[9px] font-black text-slate-300 uppercase">Public Login</span>
-               <div className="flex-1 h-px bg-slate-100"></div>
-            </div>
-            <button 
-              onClick={handleUserLogin}
-              className="w-full py-3.5 bg-[#003366] text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-sm hover:brightness-110 transition-all shadow-xl active:scale-95 border-b-4 border-black/10"
-            >
-              {t.asUser}
+              Log In to Dashboard
             </button>
           </div>
         </form>
@@ -111,7 +147,9 @@ export const Login: React.FC<LoginProps> = ({ lang, onLogin }) => {
       <div className="bg-slate-50 p-6 text-center border-t border-slate-100">
         <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest leading-relaxed">
           Warning: This is a Government of India system. Unauthorized access is prohibited by law. 
-          Use your registered Post Office credentials for official access.
+          {loginMode === 'admin' 
+            ? 'Official credentials required (Employee ID & Password).' 
+            : 'Citizen credentials required (10-Digit Customer ID & 8-Char Password).'}
         </p>
       </div>
     </div>

@@ -25,7 +25,6 @@ export const Badge: React.FC<BadgeProps> = ({ label, type, value }) => {
     }
 
     if (type === 'priority') {
-      // Updated comparison to include 'urgent' status
       if (val.includes('high') || val.includes('urgent')) return 'bg-[#C8102E] text-white border-[#C8102E] shadow-[0_2px_4px_rgba(200,16,46,0.2)]';
       if (val.includes('normal')) return 'bg-[#003366] text-white border-[#003366]';
       return 'bg-slate-100 text-slate-600 border-slate-300';
@@ -36,6 +35,11 @@ export const Badge: React.FC<BadgeProps> = ({ label, type, value }) => {
       if (val === 'unhappy') return 'bg-orange-50 text-orange-700 border-orange-200';
       if (val === 'positive') return 'bg-emerald-50 text-emerald-700 border-emerald-200';
       return 'bg-slate-50 text-slate-500 border-slate-200';
+    }
+
+    if (type === 'category') {
+      if (val === 'invalid') return 'bg-slate-800 text-white border-black font-black';
+      return 'bg-white text-[#003366] border-[#003366]/20 font-bold';
     }
     
     return 'bg-white text-[#003366] border-[#003366]/20 font-bold';

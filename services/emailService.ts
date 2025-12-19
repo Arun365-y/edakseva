@@ -18,7 +18,8 @@ export const emailService = {
         subject: 'Speed Post Delay - Order #IN99281',
         originalText: 'My Speed Post from Bangalore to Delhi has not moved for 4 days. It is very urgent. Please look into this immediately.',
         timestamp: Date.now() - 3600000 * 2,
-        status: 'pending'
+        status: 'pending',
+        location: 'Karnataka Circle'
       },
       {
         id: 'msg-102',
@@ -26,7 +27,8 @@ export const emailService = {
         subject: 'Damaged parcel received',
         originalText: 'I received my parcel today but the box was completely torn and the item inside is broken. Very disappointed with the handling.',
         timestamp: Date.now() - 3600000 * 5,
-        status: 'pending'
+        status: 'pending',
+        location: 'Maharashtra Circle'
       },
       {
         id: 'msg-103',
@@ -34,7 +36,26 @@ export const emailService = {
         subject: 'Query regarding refund',
         originalText: 'I was promised a refund for my lost shipment last month. I still haven\'t received any update on the transaction status.',
         timestamp: Date.now() - 3600000 * 24,
-        status: 'pending'
+        status: 'pending',
+        location: 'Delhi Circle'
+      },
+      {
+        id: 'msg-104',
+        customerEmail: 'vicky.p@yahoo.com',
+        subject: 'Parcel lost in transit',
+        originalText: 'My package hasn\'t arrived in 2 weeks. Tracking says it is stuck in Tamil Nadu. This is unacceptable.',
+        timestamp: Date.now() - 3600000 * 12,
+        status: 'pending',
+        location: 'Tamil Nadu Circle'
+      },
+      {
+        id: 'msg-105',
+        customerEmail: 'sneha.r@outlook.com',
+        subject: 'Rude staff at counter',
+        originalText: 'The staff at the local post office in Pune was extremely unhelpful and rude when I went to collect my registered letter.',
+        timestamp: Date.now() - 3600000 * 1,
+        status: 'pending',
+        location: 'Maharashtra Circle'
       }
     ];
   },

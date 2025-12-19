@@ -45,6 +45,11 @@ export class GeminiService {
     const langNames: Record<string, string> = { en: 'English', hi: 'Hindi', te: 'Telugu' };
     const targetLang = langNames[language] || 'English';
 
+    // Special handling for invalid complaints
+    if (category.toLowerCase() === 'invalid') {
+      return `Subject: Notification regarding your recent submission\n\nDear Customer,\n\nThank you for reaching out to the Department of Posts. Upon reviewing your recent submission, our automated system has identified that the content does not contain a recognizable grievance or specific service request related to India Post.\n\nAs a result, we are unable to process this request further. If you have a specific complaint regarding a parcel, delay, or service, please provide more details including any relevant tracking numbers.\n\nBest regards,\ne_DakSeva Customer Support Team`;
+    }
+
     const prompt = `Write a polite email response to a postal customer based on complaint details below.
 The entire response MUST be written in ${targetLang}.
 

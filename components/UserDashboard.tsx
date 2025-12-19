@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Language, translations } from '../translations';
 import { ComplaintRecord, UserSession, PostOrder } from '../types';
 
@@ -11,11 +11,63 @@ interface UserDashboardProps {
   isSubmitting?: boolean;
 }
 
-const MOCK_ORDERS: PostOrder[] = [
-  { id: 'ORD-001', trackingId: 'SP9928172IN', origin: 'Mumbai GPO', destination: 'Delhi Head PO', status: 'In Transit', estimatedDelivery: '24 Oct 2023' },
-  { id: 'ORD-002', trackingId: 'RP1122334IN', origin: 'Bengaluru RMS', destination: 'Chennai GPO', status: 'Delivered', estimatedDelivery: '18 Oct 2023' },
-  { id: 'ORD-003', trackingId: 'SP5544332IN', origin: 'Hyderabad RMS', destination: 'Pune RMS', status: 'Out for Delivery', estimatedDelivery: '20 Oct 2023' },
+// Larger pool of Indian postal circles and hubs for better diversity
+const CITIES = [
+  'Mumbai GPO', 'Delhi Head PO', 'Bangalore RMS', 'Chennai GPO', 'Kolkata RMS', 
+  'Hyderabad GPO', 'Ahmedabad RMS', 'Pune City PO', 'Jaipur Head PO', 'Lucknow RMS',
+  'Patna GPO', 'Bhopal Head PO', 'Chandigarh RMS', 'Guwahati GPO', 'Thiruvananthapuram RMS',
+  'Srinagar Head PO', 'Ranchi GPO', 'Bhubaneswar RMS', 'Raipur Head PO', 'Dehradun GPO',
+  'Shimla RMS', 'Amritsar Head PO', 'Madurai GPO', 'Kochi RMS', 'Visakhapatnam GPO'
 ];
+
+const STATUSES: ('In Transit' | 'Delivered' | 'Out for Delivery')[] = [
+  'In Transit', 'Delivered', 'Out for Delivery', 'In Transit'
+];
+
+// Simple deterministic hash for strings to select unique values from pools
+const hashString = (str: string) => {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  return Math.abs(hash);
+};
+
+// Generates unique mock data based on user customerId
+const getMockOrdersForUser = (customerId: string): PostOrder[] => {
+  if (customerId === '1234567890') return []; // Admin doesn't have personal orders
+  
+  const baseHash = hashString(customerId);
+  const orderCount = (baseHash % 3) + 2; // 2 to 4 orders per user
+  const orders: PostOrder[] = [];
+
+  for (let i = 0; i < orderCount; i++) {
+    const itemSeed = baseHash + (i * 1337);
+    const originIdx = itemSeed % CITIES.length;
+    // Ensure destination is different from origin
+    const destIdx = (itemSeed + 7) % CITIES.length === originIdx 
+      ? (itemSeed + 8) % CITIES.length 
+      : (itemSeed + 7) % CITIES.length;
+    
+    const status = STATUSES[itemSeed % STATUSES.length];
+    const day = (itemSeed % 28) + 1;
+    const trackingPrefix = (itemSeed % 2 === 0) ? 'SP' : 'RP';
+    const trackingNum = (itemSeed % 9000000) + 1000000;
+
+    orders.push({
+      id: `ORD-${itemSeed % 10000}`,
+      trackingId: `${trackingPrefix}${trackingNum}IN`,
+      origin: CITIES[originIdx],
+      destination: CITIES[destIdx],
+      status: status,
+      estimatedDelivery: `${day} Oct 2023`
+    });
+  }
+
+  return orders;
+};
 
 export const UserDashboard: React.FC<UserDashboardProps> = ({ lang, session, history, onAddComplaint, isSubmitting }) => {
   const t = translations[lang];
@@ -24,7 +76,9 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ lang, session, his
   const [selectedOrder, setSelectedOrder] = useState<PostOrder | null>(null);
   const [mode, setMode] = useState<'Complaint' | 'Feedback'>('Complaint');
 
-  const userComplaints = history.filter(h => h.customerEmail === session.email);
+  // Generate unique orders based on the current user session ID
+  const userOrders = useMemo(() => getMockOrdersForUser(session.customerId), [session.customerId]);
+  const userComplaints = history.filter(h => h.customerId === session.customerId);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,16 +106,18 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ lang, session, his
              <div className="w-1.5 h-6 bg-[#C8102E]"></div>
              <h2 className="text-lg font-black text-[#003366] uppercase tracking-[0.1em]">{t.myOrders}</h2>
           </div>
-          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Active Tracking Session</span>
+          <div className="flex flex-col items-end">
+             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Active Tracking Session</span>
+             <span className="text-[8px] font-bold text-india-post-red uppercase tracking-tighter">ID: {session.customerId}</span>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {MOCK_ORDERS.map(order => (
+          {userOrders.map(order => (
             <div 
               key={order.id} 
               className={`bg-white border rounded-sm p-6 transition-all relative overflow-hidden group shadow-sm ${selectedOrder?.id === order.id ? 'border-[#C8102E] ring-1 ring-[#C8102E]/20 bg-red-50/10' : 'border-slate-200 hover:border-slate-400'}`}
             >
-              {/* Emblem Watermark Card */}
               <div className="absolute -right-4 -bottom-4 opacity-[0.03] grayscale pointer-events-none group-hover:scale-110 transition-transform">
                 <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/55/Emblem_of_India.svg/800px-Emblem_of_India.svg.png" className="w-24" alt="" />
               </div>
@@ -81,7 +137,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ lang, session, his
               <div className="space-y-3 mb-6">
                  <div className="flex items-center justify-between text-[11px] font-bold">
                     <span className="text-slate-400 uppercase tracking-tighter">Origin</span>
-                    <span className="text-slate-800">{order.origin}</span>
+                    <span className="text-slate-800 truncate pl-2">{order.origin}</span>
                  </div>
                  <div className="h-px bg-slate-100 w-full relative">
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-2">
@@ -90,7 +146,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ lang, session, his
                  </div>
                  <div className="flex items-center justify-between text-[11px] font-bold">
                     <span className="text-slate-400 uppercase tracking-tighter">Destination</span>
-                    <span className="text-slate-800">{order.destination}</span>
+                    <span className="text-slate-800 truncate pl-2">{order.destination}</span>
                  </div>
               </div>
 
@@ -228,7 +284,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ lang, session, his
                         }`}>
                           {complaint.status === 'sent' ? 'RESOLVED' : 'PENDING OFFICIAL REVIEW'}
                         </div>
-                        {complaint.requiresReview && complaint.status !== 'sent' && (
+                        {complaint.status !== 'sent' && (
                           <span className="text-[8px] font-bold text-[#C8102E] uppercase animate-pulse">Post Master follow-up active</span>
                         )}
                       </div>
@@ -238,30 +294,47 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ lang, session, his
                       "{complaint.originalText}"
                     </div>
                     
-                    {complaint.formalEmailDraft && (
-                      <div className="mt-4 pt-6 border-t-2 border-dashed border-slate-100 animate-in slide-in-from-top-4 duration-500">
-                         <div className="flex items-center justify-between mb-4">
-                            <div className="flex items-center gap-3">
-                              <div className={`${complaint.status === 'sent' ? 'bg-[#C8102E]' : 'bg-[#003366]'} p-1.5 rounded-sm shadow-lg`}>
-                                 <svg className="w-4 h-4 text-[#FFCC00]" fill="currentColor" viewBox="0 0 20 20"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884zM18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/></svg>
-                              </div>
-                              <h4 className={`text-[10px] font-black ${complaint.status === 'sent' ? 'text-[#C8102E]' : 'text-[#003366]'} uppercase tracking-[0.2em]`}>
-                                {complaint.status === 'sent' ? 'Official Departmental Response' : 'Instant Preliminary AI Resolution'}
-                              </h4>
+                    <div className="space-y-6 mt-4">
+                       {complaint.aiResponse && (
+                         <div className="pt-6 border-t-2 border-dashed border-slate-100 animate-in slide-in-from-top-4 duration-500">
+                            <div className="flex items-center justify-between mb-4">
+                               <div className="flex items-center gap-3">
+                                 <div className="bg-[#003366] p-1.5 rounded-sm shadow-lg">
+                                    <svg className="w-4 h-4 text-[#FFCC00]" fill="currentColor" viewBox="0 0 20 20"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884zM18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/></svg>
+                                 </div>
+                                 <h4 className="text-[10px] font-black text-[#003366] uppercase tracking-[0.2em]">Instant Preliminary AI Resolution</h4>
+                               </div>
                             </div>
-                            {complaint.status !== 'sent' && (
-                              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest border border-slate-200 px-2 py-1 rounded-full">Suggested Solution</span>
-                            )}
-                         </div>
-                         <div className="p-8 bg-white text-[13px] leading-[2] text-slate-700 whitespace-pre-wrap rounded-sm border border-slate-100 shadow-inner font-serif relative">
-                            {complaint.formalEmailDraft}
-                            <div className="mt-8 pt-4 border-t border-slate-50 flex justify-between items-center text-[9px] font-black text-slate-300">
-                               <span className="uppercase">{complaint.status === 'sent' ? 'Official Digital Signature Verified' : 'AI Analysis Only - Official follow-up in progress'}</span>
-                               <span className="uppercase">Dept of Posts India</span>
+                            <div className="p-8 bg-white text-[13px] leading-[2] text-slate-700 whitespace-pre-wrap rounded-sm border border-slate-100 shadow-inner font-serif relative">
+                               {complaint.aiResponse}
+                               <div className="mt-8 pt-4 border-t border-slate-50 flex justify-between items-center text-[9px] font-black text-slate-300">
+                                  <span className="uppercase">Generated by e_DakSeva AI v4.0</span>
+                                  <span className="uppercase">Automated Desk</span>
+                               </div>
                             </div>
                          </div>
-                      </div>
-                    )}
+                       )}
+
+                       {complaint.status === 'sent' && complaint.adminResponse && (
+                         <div className="pt-6 border-t-2 border-dashed border-slate-100 animate-in slide-in-from-top-4 duration-500">
+                            <div className="flex items-center justify-between mb-4">
+                               <div className="flex items-center gap-3">
+                                 <div className="bg-[#C8102E] p-1.5 rounded-sm shadow-lg">
+                                    <svg className="w-4 h-4 text-[#FFCC00]" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/></svg>
+                                 </div>
+                                 <h4 className="text-[10px] font-black text-[#C8102E] uppercase tracking-[0.2em]">Official Departmental Response</h4>
+                               </div>
+                            </div>
+                            <div className="p-8 bg-white text-[13px] leading-[2] text-slate-900 whitespace-pre-wrap rounded-sm border border-[#C8102E]/20 shadow-xl font-serif relative ring-2 ring-india-post-red/5">
+                               {complaint.adminResponse}
+                               <div className="mt-8 pt-4 border-t border-slate-50 flex justify-between items-center text-[9px] font-black text-india-post-red">
+                                  <span className="uppercase">Official Digital Signature Verified</span>
+                                  <span className="uppercase">Dept of Posts India</span>
+                               </div>
+                            </div>
+                         </div>
+                       )}
+                    </div>
                   </div>
                 ))
               )}
