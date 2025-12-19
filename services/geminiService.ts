@@ -45,7 +45,6 @@ export class GeminiService {
     const langNames: Record<string, string> = { en: 'English', hi: 'Hindi', te: 'Telugu' };
     const targetLang = langNames[language] || 'English';
 
-    // Special handling for invalid complaints
     if (category.toLowerCase() === 'invalid') {
       return `Subject: Notification regarding your recent submission\n\nDear Customer,\n\nThank you for reaching out to the Department of Posts. Upon reviewing your recent submission, our automated system has identified that the content does not contain a recognizable grievance or specific service request related to India Post.\n\nAs a result, we are unable to process this request further. If you have a specific complaint regarding a parcel, delay, or service, please provide more details including any relevant tracking numbers.\n\nBest regards,\ne_DakSeva Customer Support Team`;
     }
@@ -73,6 +72,19 @@ Keep tone:
     });
 
     return response.text || '';
+  }
+
+  async getChatResponse(userMessage: string, history: { role: 'user' | 'model', parts: { text: string }[] }[]): Promise<string> {
+    const chat = this.ai.chats.create({
+      model: 'gemini-3-flash-preview',
+      config: {
+        systemInstruction: "You are 'DakMitra', the official AI assistant for India Post. You are helpful, polite, and knowledgeable about Indian postal services (Speed Post, Registered Post, Savings Schemes, PLI, etc.). Answer user queries concisely. If a user asks to track a parcel, explain they can do it via the tracking ID on the dashboard. If they have a complaint, tell them to use the 'Raise Complaint' button. Keep responses under 100 words.",
+      },
+      history: history,
+    });
+
+    const result = await chat.sendMessage({ message: userMessage });
+    return result.text || "I apologize, but I am unable to process that right now. Please try again or contact our toll-free support.";
   }
 }
 

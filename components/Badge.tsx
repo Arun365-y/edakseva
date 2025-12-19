@@ -46,9 +46,9 @@ export const Badge: React.FC<BadgeProps> = ({ label, type, value }) => {
   };
 
   return (
-    <div className="flex flex-col gap-1 min-w-[80px]">
-      <span className="text-[9px] uppercase font-black tracking-widest text-slate-400">{label}</span>
-      <span className={`px-3 py-2 rounded-sm text-[9px] font-black border uppercase tracking-widest transition-all text-center ${getStyles()}`}>
+    <div className="flex flex-col gap-1 min-w-[5rem]">
+      <span className="text-[0.5625rem] uppercase font-black tracking-widest text-slate-400">{label}</span>
+      <span className={`px-3 py-2 rounded-sm text-[0.5625rem] font-black border uppercase tracking-widest transition-all text-center ${getStyles()}`}>
         {value}
       </span>
     </div>

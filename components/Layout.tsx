@@ -6,33 +6,65 @@ interface LayoutProps {
   children: React.ReactNode;
   lang: Language;
   onLanguageChange: (lang: Language) => void;
+  currentFontSize: number;
+  onFontSizeChange: (size: number) => void;
+  onToggleStats: () => void;
+  isAdmin?: boolean;
 }
 
-export const Layout: React.FC<LayoutProps> = ({ children, lang, onLanguageChange }) => {
+export const Layout: React.FC<LayoutProps> = ({ 
+  children, 
+  lang, 
+  onLanguageChange, 
+  currentFontSize, 
+  onFontSizeChange,
+  onToggleStats,
+  isAdmin = false
+}) => {
   const t = translations[lang];
 
   return (
     <div className="min-h-screen flex flex-col">
       {/* Top Utility Bar (NIC Style) */}
-      <div className="bg-[#003366] text-white py-1.5 px-4 text-[10px] font-medium flex justify-between items-center border-b border-white/10">
+      <div className="bg-[#003366] text-white py-1.5 px-4 text-[0.625rem] font-medium flex justify-between items-center border-b border-white/10">
         <div className="flex gap-4 items-center">
-          <span className="flex items-center gap-1">
+          <span className="flex items-center gap-1 uppercase tracking-wider">
              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/></svg>
              GOVERNMENT OF INDIA
           </span>
           <span className="opacity-60">|</span>
-          <span>MINISTRY OF COMMUNICATIONS</span>
+          <span className="uppercase tracking-wider">MINISTRY OF COMMUNICATIONS</span>
         </div>
         <div className="flex items-center gap-4">
            <div className="flex gap-3">
-             <button onClick={() => onLanguageChange('en')} className={`hover:underline ${lang === 'en' ? 'font-bold text-[#FFCC00]' : ''}`}>ENGLISH</button>
-             <button onClick={() => onLanguageChange('hi')} className={`hover:underline ${lang === 'hi' ? 'font-bold text-[#FFCC00]' : ''}`}>हिंदी</button>
-             <button onClick={() => onLanguageChange('te')} className={`hover:underline ${lang === 'te' ? 'font-bold text-[#FFCC00]' : ''}`}>తెలుగు</button>
+             <button onClick={() => onLanguageChange('en')} className={`hover:underline text-[0.625rem] ${lang === 'en' ? 'font-bold text-[#FFCC00]' : ''}`}>ENGLISH</button>
+             <button onClick={() => onLanguageChange('hi')} className={`hover:underline text-[0.625rem] ${lang === 'hi' ? 'font-bold text-[#FFCC00]' : ''}`}>हिंदी</button>
+             <button onClick={() => onLanguageChange('te')} className={`hover:underline text-[0.625rem] ${lang === 'te' ? 'font-bold text-[#FFCC00]' : ''}`}>తెలుగు</button>
            </div>
            <span className="opacity-60">|</span>
-           <button className="hover:opacity-80">A-</button>
-           <button className="hover:opacity-80">A</button>
-           <button className="hover:opacity-80">A+</button>
+           <div className="flex gap-2">
+             <button 
+               onClick={() => onFontSizeChange(90)} 
+               className={`hover:opacity-80 px-2 py-0.5 border border-white/20 rounded text-[0.625rem] font-bold ${currentFontSize === 90 ? 'bg-white/20 text-[#FFCC00] border-[#FFCC00]' : ''}`}
+               title="Decrease Font Size"
+             >
+               A-
+             </button>
+             <button 
+               onClick={() => onFontSizeChange(100)} 
+               className={`hover:opacity-80 px-2 py-0.5 border border-white/20 rounded text-[0.625rem] font-bold ${currentFontSize === 100 ? 'bg-white/20 text-[#FFCC00] border-[#FFCC00]' : ''}`}
+               title="Normal Font Size"
+             >
+               A
+             </button>
+             <button 
+               onClick={() => onFontSizeChange(120)} 
+               className={`hover:opacity-80 px-2 py-0.5 border border-white/20 rounded text-[0.625rem] font-bold ${currentFontSize === 120 ? 'bg-white/20 text-[#FFCC00] border-[#FFCC00]' : ''}`}
+               title="Increase Font Size"
+             >
+               A+
+             </button>
+           </div>
         </div>
       </div>
 
@@ -40,13 +72,11 @@ export const Layout: React.FC<LayoutProps> = ({ children, lang, onLanguageChange
       <header className="bg-white border-b-4 border-[#C8102E] py-4 shadow-md sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 flex items-center justify-between">
           <div className="flex items-center gap-6">
-            {/* National Emblem (Satyamev Jayate) */}
             <div className="hidden md:flex flex-col items-center border-r border-slate-200 pr-6">
                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/55/Emblem_of_India.svg/800px-Emblem_of_India.svg.png" alt="Emblem of India" className="h-14 mb-1" />
-               <span className="text-[8px] font-black tracking-tight text-slate-500 uppercase">Satyamev Jayate</span>
+               <span className="text-[0.5rem] font-black tracking-tight text-slate-500 uppercase">Satyamev Jayate</span>
             </div>
 
-            {/* India Post Logo Section */}
             <div className="flex items-center gap-4">
                <div className="flex flex-col items-start">
                   <div className="flex flex-col items-center">
@@ -62,34 +92,39 @@ export const Layout: React.FC<LayoutProps> = ({ children, lang, onLanguageChange
                   </div>
                </div>
                <div className="h-16 w-px bg-slate-200 mx-2 hidden sm:block"></div>
-               <div className="flex flex-col">
+               <div className="flex flex-col cursor-pointer" onClick={() => window.location.reload()}>
                   <h1 className="text-2xl font-black text-[#003366] tracking-tight uppercase">
                     e_DakSeva
                   </h1>
-                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em]">
+                  <p className="text-[0.5625rem] font-bold text-slate-400 uppercase tracking-[0.2em]">
                     Department of Posts • Centralized Grievance Redressal
                   </p>
                </div>
             </div>
           </div>
 
-          <div className="hidden lg:flex flex-col items-end">
-             <div className="bg-[#C8102E] text-[#FFCC00] px-4 py-1.5 rounded-sm text-[10px] font-black uppercase tracking-widest shadow-lg border border-[#FFCC00]/20">
-                {t.internalPortal}
-             </div>
-             <p className="text-[10px] font-black text-[#003366] mt-2 uppercase">Official Analytics Dashboard</p>
-          </div>
+          {isAdmin && (
+            <button 
+              onClick={onToggleStats}
+              className="hidden lg:flex flex-col items-end group transition-all"
+            >
+              <div className="bg-[#C8102E] text-[#FFCC00] px-4 py-1.5 rounded-sm text-[0.625rem] font-black uppercase tracking-widest shadow-lg border border-[#FFCC00]/20 group-hover:scale-105 transition-transform active:scale-95">
+                  {t.internalPortal}
+              </div>
+              <p className="text-[0.625rem] font-black text-[#003366] mt-2 uppercase border-b border-transparent group-hover:border-[#003366]">Official Analytics Dashboard</p>
+            </button>
+          )}
         </div>
       </header>
 
       {/* News Ticker */}
       <div className="bg-[#FFCC00] text-[#C8102E] py-1 border-b border-[#C8102E]/20 overflow-hidden relative">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="bg-[#C8102E] text-white px-2 py-0.5 text-[9px] font-bold uppercase absolute left-4 z-10 shadow-md">Latest</div>
+          <div className="bg-[#C8102E] text-white px-2 py-0.5 text-[0.5625rem] font-bold uppercase absolute left-4 z-10 shadow-md">Latest</div>
           <div className="animate-marquee pl-20">
-             <span className="text-[10px] font-black uppercase tracking-wider mx-10">Integration with PMO Dashboard Active</span>
-             <span className="text-[10px] font-black uppercase tracking-wider mx-10">AI-Powered Sentiment Analysis for Fast Track Redressal v3.4</span>
-             <span className="text-[10px] font-black uppercase tracking-wider mx-10">New Grievance Guidelines for Digital Dak v2.0 Released</span>
+             <span className="text-[0.625rem] font-black uppercase tracking-wider mx-10">Integration with PMO Dashboard Active</span>
+             <span className="text-[0.625rem] font-black uppercase tracking-wider mx-10">AI-Powered Sentiment Analysis for Fast Track Redressal v3.4</span>
+             <span className="text-[0.625rem] font-black uppercase tracking-wider mx-10">New Grievance Guidelines for Digital Dak v2.0 Released</span>
           </div>
         </div>
       </div>
@@ -98,34 +133,30 @@ export const Layout: React.FC<LayoutProps> = ({ children, lang, onLanguageChange
         {children}
       </main>
 
-      <footer className="bg-[#003366] text-white pt-12 pb-6">
+      <footer className="bg-[#003366] text-white pt-12 pb-6 mt-auto">
         <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-12 border-b border-white/10 pb-12">
           <div className="col-span-1 md:col-span-1">
             <div className="flex flex-col items-start gap-3">
               <span className="text-[#FFCC00] font-black text-xl tracking-tighter uppercase">e_DakSeva</span>
-              <p className="text-[11px] text-white/60 leading-relaxed font-medium">
+              <p className="text-[0.6875rem] text-white/60 leading-relaxed font-medium">
                 Official grievance monitoring and resolution portal of the Department of Posts. Serving citizens with integrity and efficiency for over a century.
               </p>
-              <div className="flex gap-2 mt-2">
-                 <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-[#FFCC00] hover:text-[#C8102E] transition-all cursor-pointer">f</div>
-                 <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-[#FFCC00] hover:text-[#C8102E] transition-all cursor-pointer">t</div>
-                 <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-[#FFCC00] hover:text-[#C8102E] transition-all cursor-pointer">i</div>
-              </div>
             </div>
           </div>
           
           <div>
-            <h4 className="text-[10px] font-black text-[#FFCC00] uppercase mb-6 tracking-widest">Portal Navigation</h4>
+            <h4 className="text-[0.625rem] font-black text-[#FFCC00] uppercase mb-6 tracking-widest">Portal Navigation</h4>
             <ul className="text-xs text-white/80 space-y-3 font-medium">
-              <li><a href="#" className="hover:text-[#FFCC00] transition-colors">Officer Login</a></li>
-              <li><a href="#" className="hover:text-[#FFCC00] transition-colors">Citizen Cell</a></li>
-              <li><a href="#" className="hover:text-[#FFCC00] transition-colors">Track Grievance</a></li>
-              <li><a href="#" className="hover:text-[#FFCC00] transition-colors">Statistics Dashboard</a></li>
+              <li><button onClick={() => window.location.reload()} className="hover:text-[#FFCC00] transition-colors">Officer Login</button></li>
+              <li><button onClick={() => window.location.reload()} className="hover:text-[#FFCC00] transition-colors">Citizen Cell</button></li>
+              {isAdmin && (
+                <li><button onClick={onToggleStats} className="hover:text-[#FFCC00] transition-colors">Statistics Dashboard</button></li>
+              )}
             </ul>
           </div>
 
           <div>
-            <h4 className="text-[10px] font-black text-[#FFCC00] uppercase mb-6 tracking-widest">Legal & Policy</h4>
+            <h4 className="text-[0.625rem] font-black text-[#FFCC00] uppercase mb-6 tracking-widest">Legal & Policy</h4>
             <ul className="text-xs text-white/80 space-y-3 font-medium">
               <li><a href="#" className="hover:text-[#FFCC00] transition-colors">Privacy Policy</a></li>
               <li><a href="#" className="hover:text-[#FFCC00] transition-colors">Terms of Service</a></li>
@@ -135,29 +166,17 @@ export const Layout: React.FC<LayoutProps> = ({ children, lang, onLanguageChange
           </div>
 
           <div>
-            <h4 className="text-[10px] font-black text-[#FFCC00] uppercase mb-6 tracking-widest">Contact Support</h4>
+            <h4 className="text-[0.625rem] font-black text-[#FFCC00] uppercase mb-6 tracking-widest">Contact Support</h4>
             <ul className="text-xs text-white/80 space-y-3 font-medium">
               <li className="flex items-center gap-2">
-                <svg className="w-4 h-4 text-[#FFCC00]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" strokeWidth={2}/></svg>
-                1800-11-2011
-              </li>
-              <li className="flex items-center gap-2">
-                <svg className="w-4 h-4 text-[#FFCC00]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" strokeWidth={2}/></svg>
+                <svg className="w-4 h-4 text-[#FFCC00]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"/></svg>
                 support@indiapost.gov.in
               </li>
             </ul>
           </div>
         </div>
-
-        <div className="max-w-7xl mx-auto px-4 mt-8 flex flex-col md:flex-row justify-between items-center gap-6">
-           <div className="flex flex-col items-center md:items-start gap-1">
-              <p className="text-[9px] font-bold text-white/40 uppercase tracking-widest">© {new Date().getFullYear()} Department of Posts, Ministry of Communications, GOI.</p>
-              <p className="text-[8px] font-bold text-white/20 uppercase">Maintained by National Informatics Centre (NIC)</p>
-           </div>
-           <div className="flex gap-4 items-center">
-              <img src="https://upload.wikimedia.org/wikipedia/en/thumb/9/95/Digital_India_logo.svg/1200px-Digital_India_logo.svg.png" className="h-8 grayscale brightness-200 contrast-200" alt="Digital India" />
-              <img src="https://upload.wikimedia.org/wikipedia/hi/4/4e/Make_in_India_logo.png" className="h-8 grayscale brightness-200" alt="Make in India" />
-           </div>
+        <div className="max-w-7xl mx-auto px-4 py-6 text-center">
+           <p className="text-[0.5rem] font-black text-white/40 uppercase tracking-[0.4em]">Designed & Developed by National Informatics Centre (NIC)</p>
         </div>
       </footer>
     </div>
